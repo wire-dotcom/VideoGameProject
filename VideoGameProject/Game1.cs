@@ -285,7 +285,6 @@ namespace VideoGameProject
             if (PCfacing == "West" && PCmovementstate >= 34 && PCmovementstate <= 40)
                 spriteBatch.Draw(PC_StopMoving2_FacingWest, PCpos, Color.White);
 
-
             spriteBatch.DrawString(font, "spritefont", new Vector2(500, 400), Color.White);
 
 
