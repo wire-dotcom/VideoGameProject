@@ -52,13 +52,26 @@ namespace VideoGameProject
         Texture2D PC_StopMoving1_FacingWest;
         Texture2D PC_StopMoving2_FacingWest;
 
+        Texture2D ARENAMASTER_Stagnant_FacingSouth;
+        Texture2D ARENAMASTER_Stagnant_FacingWest;
+        Texture2D ARENAMASTER_Stagnant_FacingEast;
+        Texture2D ARENAMASTER_Stagnant_FacingNorth;
+        Rectangle ArenamasterRect = new Rectangle(400, 100, 115, 145);
+        Rectangle ArenamasterRectHitbox = new Rectangle(410, 140, 90, 90);
+        Rectangle ArenamasterInteractRectWest = new Rectangle(300, 100, 150, 150);
+        Rectangle ArenamasterInteractRectEast = new Rectangle(450, 100, 150, 150);
+        Rectangle ArenamasterInteractRectSouth = new Rectangle(380, 150, 150, 150);
+
         private SpriteFont font;
         string gamestate = "menu";
-        int cursorstate = 0;
+        int cursorstateY = 0;
+        int cursorstateX = 0;
         int cursortime;
         int menutime;
+        int PCmovementspeed = 4;
         bool cursordelay;
         bool fullscreen = false;
+        bool dialogue = false;
         bool selected = false;
         public List<Rectangle> PCHitbox = new List<Rectangle>();
         Rectangle swordcursor = new Rectangle(515, 250, 50, 50);
@@ -68,9 +81,13 @@ namespace VideoGameProject
         Rectangle backgroundRectRightWall = new Rectangle(1150, 150, 10, 455);
         Rectangle backgroundRectCeiling = new Rectangle(160, 150, 1000, 10);
         Rectangle backgroundRectFloor = new Rectangle(160, 600, 1000, 10);
+        Rectangle dialogueCeiling = new Rectangle(160, 450, 1000, 10);
+        Rectangle dialogueRightWall = new Rectangle(1150, 450, 10, 350);
+        Rectangle dialogueLeftWall = new Rectangle(160, 450, 10, 350);
+        Rectangle dialogueFloor = new Rectangle(160, 759, 1000, 10);
 
 
-        Rectangle PC = new Rectangle(400, 250, 25, 25);
+        Rectangle PC = new Rectangle(400, 250, 100, 140);
         Vector2 PCpos = new Vector2(100, 300);
 
         string PCfacing = "South";
@@ -80,7 +97,7 @@ namespace VideoGameProject
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            graphics.IsFullScreen = fullscreen;
+            graphics.IsFullScreen = false;            
             graphics.PreferredBackBufferWidth = 1366;
             graphics.PreferredBackBufferHeight = 768;
             PCHitbox.Add(new Rectangle(0, 0, 25, 25));
@@ -146,6 +163,12 @@ namespace VideoGameProject
             PC_StopMoving2_FacingWest = Content.Load<Texture2D>("PC_StopMoving2_FacingWest");
 
 
+            ARENAMASTER_Stagnant_FacingEast = Content.Load<Texture2D>("ARENAMASTER_Stagnant_FacingEast");
+            ARENAMASTER_Stagnant_FacingNorth = Content.Load<Texture2D>("ARENAMASTER_Stagnant_FacingNorth");
+            ARENAMASTER_Stagnant_FacingSouth = Content.Load<Texture2D>("ARENAMASTER_Stagnant_FacingSouth");
+            ARENAMASTER_Stagnant_FacingWest = Content.Load<Texture2D>("ARENAMASTER_Stagnant_FacingWest");
+
+
 
             // TODO: use this.Content to load your game content here
         }
@@ -169,10 +192,6 @@ namespace VideoGameProject
             KeyboardState kstate = Keyboard.GetState();
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-            if (kstate.IsKeyDown(Keys.F9) && fullscreen == false)
-                fullscreen = true;
-            if (kstate.IsKeyDown(Keys.F9) && fullscreen == true)
-                fullscreen = false;
             if (menutime > 0)
                 menutime--;
 
@@ -191,35 +210,39 @@ namespace VideoGameProject
 
 
 
-                if (kstate.IsKeyDown(Keys.Down) && cursorstate < 2 && cursortime == 0)
+                if (kstate.IsKeyDown(Keys.Down) && cursorstateY < 2 && cursortime == 0)
                 {
-                    cursorstate++;
+                    cursorstateY++;
                     cursordelay = true;
                 }
 
 
-                if (kstate.IsKeyDown(Keys.Up) && cursorstate > 0 && cursortime == 0)
+                if (kstate.IsKeyDown(Keys.Up) && cursorstateY > 0 && cursortime == 0)
                 {
-                    cursorstate--;
+                    cursorstateY--;
                     cursordelay = true;
                 }
 
-                if (cursorstate == 0)
+                if (cursorstateY == 0)
                 {
                     swordcursor.Y = 265;
                 }
-                if (cursorstate == 1)
+                if (cursorstateY == 1)
                 {
                     swordcursor.Y = 365;
                 }
-                if (cursorstate >= 2)
+                if (cursorstateY >= 2)
                 {
                     swordcursor.Y = 465;
                 }
                 if (kstate.IsKeyDown(Keys.Enter) || kstate.IsKeyDown(Keys.Z))
                 {
                     if (swordcursor.Y == 265)
+                    {
                         gamestate = "overworld";
+                        cursorstateY = 0;
+                        cursorstateX = 0;
+                    }
                     if (swordcursor.Y == 365 && menutime == 0)
                     {
                         gamestate = "menuControls";
@@ -242,14 +265,82 @@ namespace VideoGameProject
 
             if (gamestate == "overworld")
             {
-                PC.X = (int)PCpos.X + 20;
-                PC.Y = (int)PCpos.Y + 20;
+                PC.X = (int)PCpos.X;
+                PC.Y = (int)PCpos.Y;
 
 
-                if (kstate.IsKeyDown(Keys.Down) && kstate.IsKeyUp(Keys.Up))
+                if (PC.Intersects(ArenamasterInteractRectSouth) && PCfacing == "North" || PC.Intersects(ArenamasterInteractRectEast) && PCfacing == "West" || PC.Intersects(ArenamasterInteractRectWest) && PCfacing == "East")
+                {
+                    if (kstate.IsKeyDown(Keys.Z) || kstate.IsKeyDown(Keys.Enter))
+                    {
+                        dialogue = true;
+                    }
+                }
+                if (dialogue == true)
+                {
+
+                    if (cursordelay == true)
+                    {
+                        cursortime++;
+                        if (cursortime > 10)
+                        {
+                            cursortime = 0;
+                            cursordelay = false;
+                        }
+                    }
+                    if (kstate.IsKeyDown(Keys.Right) && cursorstateX < 1 && cursortime == 0)
+                    {
+                        cursorstateX++;
+                        cursordelay = true;
+                    }
+                    if (kstate.IsKeyDown(Keys.Left) && cursorstateX > 0 && cursortime == 0)
+                    {
+                        cursorstateX--;
+                        cursordelay = true;
+                    }
+                    if (kstate.IsKeyDown(Keys.Down) && cursorstateY < 1 && cursortime == 0)
+                    {
+                        cursorstateY++;
+                        cursordelay = true;
+                    }
+                    if (kstate.IsKeyDown(Keys.Up) && cursorstateY > 0 && cursortime == 0)
+                    {
+                        cursorstateY--;
+                        cursordelay = true;
+                    }
+                    if (cursorstateX == 1 && cursorstateY == 0)
+                    {
+                        swordcursor.Y = 565;
+                        swordcursor.X = 650;
+                    }
+                    if (cursorstateX == 1 && cursorstateY == 1)
+                    {
+                        swordcursor.Y = 665;
+                        swordcursor.X = 650;
+                    }
+                    if (cursorstateX == 0 && cursorstateY == 0)
+                    {
+                        swordcursor.Y = 565;
+                        swordcursor.X = 250;
+                    }
+                    if (cursorstateX == 0 && cursorstateY == 1)
+                    {
+                        swordcursor.Y = 665;
+                        swordcursor.X = 250;
+                    }
+                    if (kstate.IsKeyDown(Keys.Enter) || kstate.IsKeyDown(Keys.Z))
+                    {
+                        if (swordcursor.Y == 665 && swordcursor.X == 650)
+                            dialogue = false;
+                    }
+
+                }
+
+
+                if (kstate.IsKeyDown(Keys.Down) && kstate.IsKeyUp(Keys.Up) && dialogue == false)
                 {
                     PCfacing = "South";
-                    PCpos.Y = PCpos.Y + 5;
+                    PCpos.Y = PCpos.Y + PCmovementspeed;
                     PCmovementstate++;
                     if (PCmovementstate > 40)
                         PCmovementstate = 1;
@@ -259,26 +350,26 @@ namespace VideoGameProject
                     PCmovementstate = 0;
                 }
 
-                if (kstate.IsKeyDown(Keys.Up) && kstate.IsKeyUp(Keys.Down))
+                if (kstate.IsKeyDown(Keys.Up) && kstate.IsKeyUp(Keys.Down) && dialogue == false)
                 {
                     PCfacing = "North";
-                    PCpos.Y = PCpos.Y - 5;
+                    PCpos.Y = PCpos.Y - PCmovementspeed;
                     PCmovementstate++;
                     if (PCmovementstate > 40)
                         PCmovementstate = 1;
                 }
-                if (kstate.IsKeyDown(Keys.Right) && kstate.IsKeyUp(Keys.Left))
+                if (kstate.IsKeyDown(Keys.Right) && kstate.IsKeyUp(Keys.Left) && dialogue == false)
                 {
                     PCfacing = "East";
-                    PCpos.X = PCpos.X + 5;
+                    PCpos.X = PCpos.X + PCmovementspeed;
                     PCmovementstate++;
                     if (PCmovementstate > 40)
                         PCmovementstate = 1;
                 }
-                if (kstate.IsKeyDown(Keys.Left) && kstate.IsKeyUp(Keys.Right))
+                if (kstate.IsKeyDown(Keys.Left) && kstate.IsKeyUp(Keys.Right) && dialogue == false)
                 {
                     PCfacing = "West";
-                    PCpos.X = PCpos.X - 5;
+                    PCpos.X = PCpos.X - PCmovementspeed;
                     PCmovementstate++;
                     if (PCmovementstate > 40)
                         PCmovementstate = 1;
@@ -329,6 +420,9 @@ namespace VideoGameProject
                 spriteBatch.DrawString(font, "Controls", new Vector2(599, 350), Color.White);
                 spriteBatch.DrawString(font, "Exit", new Vector2(599, 450), Color.White);                               
                 spriteBatch.Draw(sword, swordcursor, Color.White);
+
+
+
             }
             if (gamestate == "menuControls")
             {
@@ -348,6 +442,19 @@ namespace VideoGameProject
             if (gamestate == "overworld") //gamestate = overworld innebär att spelet är igång, då ska alltså menyn försvinna och karaktärer m.m ska kunna bli synliga. 
             {
                 spriteBatch.Draw(pixel, PC, Color.White);
+                spriteBatch.Draw(pixel, ArenamasterInteractRectEast, Color.White);
+                spriteBatch.Draw(pixel, ArenamasterInteractRectWest, Color.Green);
+                spriteBatch.Draw(pixel, ArenamasterInteractRectSouth, Color.Blue);
+                spriteBatch.Draw(pixel, ArenamasterRectHitbox, Color.Yellow);
+                if (PC.Y > ArenamasterRect.Y)
+                spriteBatch.Draw(ARENAMASTER_Stagnant_FacingSouth, ArenamasterRect, Color.White);
+                if (PC.X > ArenamasterRect.X && PC.Y < ArenamasterRect.Y)
+                    spriteBatch.Draw(ARENAMASTER_Stagnant_FacingEast, ArenamasterRect, Color.White);
+                if (PC.X < ArenamasterRect.X && PC.Y < ArenamasterRect.Y)
+                    spriteBatch.Draw(ARENAMASTER_Stagnant_FacingWest, ArenamasterRect, Color.White);
+
+
+
                 if (PCfacing == "South" && PCmovementstate == 0)
                     spriteBatch.Draw(PC_stagnant_FacingSouth, PCpos, Color.White);
                 if (PCfacing == "South" && PCmovementstate > 0 && PCmovementstate < 5)
@@ -407,6 +514,22 @@ namespace VideoGameProject
                     spriteBatch.Draw(PC_Moving2_FacingWest, PCpos, Color.White);
                 if (PCfacing == "West" && PCmovementstate >= 34 && PCmovementstate <= 40)
                     spriteBatch.Draw(PC_StopMoving2_FacingWest, PCpos, Color.White);
+
+
+
+                if (dialogue == true)
+                {
+                    spriteBatch.Draw(pixel, dialogueCeiling, Color.White);
+                    spriteBatch.Draw(pixel, dialogueRightWall, Color.White);
+                    spriteBatch.Draw(pixel, dialogueLeftWall, Color.White);
+                    spriteBatch.Draw(pixel, dialogueFloor, Color.White);
+                    spriteBatch.DrawString(font, "hello", new Vector2(200, 455), Color.White);
+                    spriteBatch.DrawString(font, "Play", new Vector2(300, 550), Color.White);
+                    spriteBatch.DrawString(font, "Pet", new Vector2(700, 550), Color.White);
+                    spriteBatch.DrawString(font, "Talk", new Vector2(300, 650), Color.White);
+                    spriteBatch.DrawString(font, "Back", new Vector2(700, 650), Color.White);
+                    spriteBatch.Draw(sword, swordcursor, Color.White);
+                }
             }
 
 
