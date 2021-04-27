@@ -53,9 +53,13 @@ namespace VideoGameProject
         Texture2D PC_StopMoving2_FacingWest;
 
         private SpriteFont font;
-        private int spritefont;
-        int gamestate = 0;
+        string gamestate = "menu";
         int cursorstate = 0;
+        int cursortime;
+        int menutime;
+        bool cursordelay;
+        bool fullscreen = false;
+        bool selected = false;
         public List<Rectangle> PCHitbox = new List<Rectangle>();
         Rectangle swordcursor = new Rectangle(515, 250, 50, 50);
         Rectangle backgroundRect = new Rectangle(0, 0, 1366, 768);
@@ -68,7 +72,7 @@ namespace VideoGameProject
 
         Rectangle PC = new Rectangle(400, 250, 25, 25);
         Vector2 PCpos = new Vector2(100, 300);
-        
+
         string PCfacing = "South";
         int PCmovementstate = 0;
 
@@ -76,9 +80,9 @@ namespace VideoGameProject
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            graphics.IsFullScreen = true;
-            graphics.PreferredBackBufferWidth = 1920;
-            graphics.PreferredBackBufferHeight = 1080;
+            graphics.IsFullScreen = fullscreen;
+            graphics.PreferredBackBufferWidth = 1366;
+            graphics.PreferredBackBufferHeight = 768;
             PCHitbox.Add(new Rectangle(0, 0, 25, 25));
 
         }
@@ -104,7 +108,7 @@ namespace VideoGameProject
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-            pixel = Content.Load <Texture2D> ("pixel");
+            pixel = Content.Load<Texture2D>("pixel");
             font = Content.Load<SpriteFont>("spritefont");
             background = Content.Load<Texture2D>("background");
             sword = Content.Load<Texture2D>("sword");
@@ -165,34 +169,78 @@ namespace VideoGameProject
             KeyboardState kstate = Keyboard.GetState();
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+            if (kstate.IsKeyDown(Keys.F9) && fullscreen == false)
+                fullscreen = true;
+            if (kstate.IsKeyDown(Keys.F9) && fullscreen == true)
+                fullscreen = false;
+            if (menutime > 0)
+                menutime--;
 
-            if (gamestate == 0)
+            if (gamestate == "menu")
             {
-                if (kstate.IsKeyDown(Keys.Down) && cursorstate < 2)
+                if (cursordelay == true) // kollar ifall pekaren ska vänta, alltså ifall den nyligen rört på sig, och  räknar sedan upp till värdet som cursortime ska vara mindre än, innan den låter pekaren röra på sig igen. 
+                {
+                    cursortime++;
+                    if (cursortime > 10)
+                    {
+                        cursortime = 0;
+                        cursordelay = false;
+                    }
+                }
+
+
+
+
+                if (kstate.IsKeyDown(Keys.Down) && cursorstate < 2 && cursortime == 0)
                 {
                     cursorstate++;
+                    cursordelay = true;
                 }
-                if (kstate.IsKeyDown(Keys.Up) && cursorstate > 0)
+
+
+                if (kstate.IsKeyDown(Keys.Up) && cursorstate > 0 && cursortime == 0)
                 {
                     cursorstate--;
+                    cursordelay = true;
                 }
+
                 if (cursorstate == 0)
                 {
-                    swordcursor.Y = 250;
+                    swordcursor.Y = 265;
                 }
                 if (cursorstate == 1)
                 {
-                    swordcursor.Y = 350;
+                    swordcursor.Y = 365;
                 }
                 if (cursorstate >= 2)
                 {
-                    swordcursor.Y = 450;
+                    swordcursor.Y = 465;
+                }
+                if (kstate.IsKeyDown(Keys.Enter) || kstate.IsKeyDown(Keys.Z))
+                {
+                    if (swordcursor.Y == 265)
+                        gamestate = "overworld";
+                    if (swordcursor.Y == 365 && menutime == 0)
+                    {
+                        gamestate = "menuControls";
+                        swordcursor.Y = 500;
+                        menutime = 10;
+                    }
+                    if (swordcursor.Y == 465)
+                        Exit();
                 }
             }
+            if (gamestate == "menuControls")
+                if (kstate.IsKeyDown(Keys.Enter) && menutime == 0 || kstate.IsKeyDown(Keys.Z) && menutime == 0)
+                {
+                    gamestate = "menu";
+                    menutime = 10;
+                }
 
-                
 
-            if (gamestate == 1)
+
+
+            if (gamestate == "overworld")
             {
                 PC.X = (int)PCpos.X + 20;
                 PC.Y = (int)PCpos.Y + 20;
@@ -265,10 +313,24 @@ namespace VideoGameProject
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.GreenYellow);
+            GraphicsDevice.Clear(Color.Black);
             spriteBatch.Begin();
 
-            if (gamestate == 0)
+            if (gamestate == "menu")
+            {
+                spriteBatch.Draw(background, backgroundRect, Color.White);
+                spriteBatch.Draw(pixel, backgroundRectSub, Color.Black);
+                spriteBatch.Draw(pixel, backgroundRectLeftWall, Color.Red);
+                spriteBatch.Draw(pixel, backgroundRectRightWall, Color.Red);
+                spriteBatch.Draw(pixel, backgroundRectCeiling, Color.Red);
+                spriteBatch.Draw(pixel, backgroundRectFloor, Color.Red);
+                spriteBatch.DrawString(font, " ", new Vector2(550, 160), Color.White);               
+                spriteBatch.DrawString(font, "Start", new Vector2(599, 250), Color.White);
+                spriteBatch.DrawString(font, "Controls", new Vector2(599, 350), Color.White);
+                spriteBatch.DrawString(font, "Exit", new Vector2(599, 450), Color.White);                               
+                spriteBatch.Draw(sword, swordcursor, Color.White);
+            }
+            if (gamestate == "menuControls")
             {
                 spriteBatch.Draw(background, backgroundRect, Color.White);
                 spriteBatch.Draw(pixel, backgroundRectSub, Color.Black);
@@ -277,13 +339,13 @@ namespace VideoGameProject
                 spriteBatch.Draw(pixel, backgroundRectCeiling, Color.Red);
                 spriteBatch.Draw(pixel, backgroundRectFloor, Color.Red);
                 spriteBatch.DrawString(font, " ", new Vector2(550, 160), Color.White);
-                spriteBatch.DrawString(font, "Start", new Vector2(599, 250), Color.White);
-                spriteBatch.DrawString(font, "Controls", new Vector2(599, 350), Color.White);
-                spriteBatch.DrawString(font, "Exit", new Vector2(599, 450), Color.White);
+                spriteBatch.DrawString(font, "Movement - Arrow Keys", new Vector2(199, 155), Color.White);
+                spriteBatch.DrawString(font, "Interact - Z or Enter", new Vector2(199, 250), Color.White);
+                spriteBatch.DrawString(font, "Back", new Vector2(599, 485), Color.White);
                 spriteBatch.Draw(sword, swordcursor, Color.White);
             }
 
-            if (gamestate == 1) //gamestate = 1 innebär att spelet är igång, då ska alltså menyn försvinna och karaktärer m.m ska kunna bli synliga. 
+            if (gamestate == "overworld") //gamestate = overworld innebär att spelet är igång, då ska alltså menyn försvinna och karaktärer m.m ska kunna bli synliga. 
             {
                 spriteBatch.Draw(pixel, PC, Color.White);
                 if (PCfacing == "South" && PCmovementstate == 0)
