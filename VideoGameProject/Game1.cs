@@ -19,6 +19,8 @@ namespace VideoGameProject
         Texture2D pixel;
         Texture2D background;
         Texture2D sword;
+        Texture2D Skeleton;
+        Texture2D SkeletonDeath;
 
         Texture2D PC_stagnant_FacingSouth;
         Texture2D PC_Moving1_FacingSouth;
@@ -63,16 +65,19 @@ namespace VideoGameProject
         Rectangle ArenamasterInteractRectSouth = new Rectangle(380, 150, 150, 150);
 
         private SpriteFont font;
-        string gamestate = "menu";
-        int cursorstateY = 0;
-        int cursorstateX = 0;
+        string gamestate = "menu"; // string gamestate väljer vilket stadie spelet ska vara alltså i stort drag vad som ska ritas, det kan vara ett stadie för huvudmenyn eller ett stadie för när spelet är igång som vanligt.
+        int cursorstateY = 0; // Y värde för pekaren.
+        int cursorstateX = 0; // X värde för perkaren. Räknas inte i pixlar utan varierar bara mellan olika förbestämda lägen, till exempel så är läge cursorstate X = 0, cursorstate Y = 0 ursprungsläge, och X = 0, Y = 1 är samma X värde, men ett Y värde längre nedåt. 
         int cursortime;
         int menutime;
         int PCmovementspeed = 4;
+        int Level = 0;
         bool cursordelay;
+        bool KnowArenaRules = false;
         bool fullscreen = false;
         bool dialogue = false;
         bool selected = false;
+        
         public List<Rectangle> PCHitbox = new List<Rectangle>();
         Rectangle swordcursor = new Rectangle(515, 250, 50, 50);
         Rectangle backgroundRect = new Rectangle(0, 0, 1366, 768);
@@ -85,23 +90,46 @@ namespace VideoGameProject
         Rectangle dialogueRightWall = new Rectangle(1150, 450, 10, 350);
         Rectangle dialogueLeftWall = new Rectangle(160, 450, 10, 350);
         Rectangle dialogueFloor = new Rectangle(160, 759, 1000, 10);
+        Rectangle BattleMenuCeiling = new Rectangle(160, 520, 1000, 10);
+        Rectangle BattleMenuRightWall = new Rectangle(1150, 520, 10, 350);
+        Rectangle BattleMenuLeftWall = new Rectangle(160, 520, 10, 350);
+        Rectangle BattleMenuFloor = new Rectangle(160, 759, 1000, 10);
 
 
         Rectangle PC = new Rectangle(400, 250, 100, 140);
+        Rectangle EnemyRect = new Rectangle(-100, 35, 1500, 500);
         Vector2 PCpos = new Vector2(100, 300);
+        bool Attacks = false;
+        bool Magic = false;
+        bool PlayerTurn = true;
+        bool AttackAnimation = false;
+        bool EndingAnimation = false;
 
         string PCfacing = "South";
         int PCmovementstate = 0;
+        int PCHP = 100;
+        int EnemyMaxHealth;
+        bool EnemyMaxHealthSet = false;
+        int getEnemyHP;
+
+        List<Enemy> Enemies = new List<Enemy>();
+        Enemy Skeleton1 = new Enemy();
+
+
+
+        List<Attacks> attacks = new List<Attacks>();
+        Attacks Punch = new Attacks();
+        
 
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            graphics.IsFullScreen = false;            
+            graphics.IsFullScreen = true;            
             graphics.PreferredBackBufferWidth = 1366;
             graphics.PreferredBackBufferHeight = 768;
             PCHitbox.Add(new Rectangle(0, 0, 25, 25));
-
+            
         }
 
         /// <summary>
@@ -129,6 +157,8 @@ namespace VideoGameProject
             font = Content.Load<SpriteFont>("spritefont");
             background = Content.Load<Texture2D>("background");
             sword = Content.Load<Texture2D>("sword");
+            Skeleton = Content.Load<Texture2D>("Skeleton");
+            SkeletonDeath = Content.Load<Texture2D>("Skeleton");
             PC_stagnant_FacingSouth = Content.Load<Texture2D>("PC_stagnant_FacingSouth");
             PC_Moving1_FacingSouth = Content.Load<Texture2D>("PC_Moving1_FacingSouth");
             PC_Moving2_FacingSouth = Content.Load<Texture2D>("PC_Moving2_FacingSouth");
@@ -194,6 +224,10 @@ namespace VideoGameProject
                 Exit();
             if (menutime > 0)
                 menutime--;
+
+            getEnemyHP = Skeleton1.GetEnemyHP();
+            Punch.SetAttackDamage(10);
+
 
             if (gamestate == "menu")
             {
@@ -330,12 +364,26 @@ namespace VideoGameProject
                     }
                     if (kstate.IsKeyDown(Keys.Enter) || kstate.IsKeyDown(Keys.Z))
                     {
-                        if (swordcursor.Y == 665 && swordcursor.X == 650)
+                        if (cursorstateX == 1 && cursorstateY == 1)
+                        {
+
                             dialogue = false;
+                        }
+                        if (cursorstateX == 0 && cursorstateY == 1 && KnowArenaRules == true)
+                        {
+                            gamestate = "Battle";
+                            Skeleton1.SetEnemyAttack(10);
+                            Skeleton1.SetEnemyHP(20);
+                        }
+                        if (cursorstateX == 0 && cursorstateY == 0 && KnowArenaRules == false)
+                        {
+                            string ArenaMasterRuleTalk;
+                            ArenaMasterRuleTalk = "";
+                            KnowArenaRules = true;
+                        }
                     }
 
-                }
-
+                }          
 
                 if (kstate.IsKeyDown(Keys.Down) && kstate.IsKeyUp(Keys.Up) && dialogue == false)
                 {
@@ -391,6 +439,99 @@ namespace VideoGameProject
                 */
 
             }
+            if (gamestate == "Battle")
+            {
+                if (Skeleton1.GetEnemyHP() <= 0)
+                    EndingAnimation = true;
+
+                if (EndingAnimation == true && kstate.IsKeyDown(Keys.Z) && menutime == 0)
+                    gamestate = "overworld";
+                            
+
+                if (EnemyMaxHealthSet == false)
+                {
+                    EnemyMaxHealth = 20;
+                    EnemyMaxHealthSet = true;
+                }
+
+                if (cursordelay == true)
+                {
+                    cursortime++;
+                    if (cursortime > 10)
+                    {
+                        cursortime = 0;
+                        cursordelay = false;
+                    }
+                }
+                if (kstate.IsKeyDown(Keys.Right) && cursorstateX < 1 && cursortime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+                    cursorstateX++;
+                    cursordelay = true;
+                }
+                if (kstate.IsKeyDown(Keys.Left) && cursorstateX > 0 && cursortime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+                    cursorstateX--;
+                    cursordelay = true;
+                }
+                if (kstate.IsKeyDown(Keys.Down) && cursorstateY < 1 && cursortime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+                    cursorstateY++;
+                    cursordelay = true;
+                }
+                if (kstate.IsKeyDown(Keys.Up) && cursorstateY > 0 && cursortime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+                    cursorstateY--;
+                    cursordelay = true;
+                }
+                if (cursorstateX == 1 && cursorstateY == 0)
+                {
+                    swordcursor.Y = 565;
+                    swordcursor.X = 650;
+                }
+                if (cursorstateX == 1 && cursorstateY == 1)
+                {
+                    swordcursor.Y = 665;
+                    swordcursor.X = 650;
+                }
+                if (cursorstateX == 0 && cursorstateY == 0)
+                {
+                    swordcursor.Y = 565;
+                    swordcursor.X = 250;
+                }
+                if (cursorstateX == 0 && cursorstateY == 1)
+                {
+                    swordcursor.Y = 665;
+                    swordcursor.X = 250;
+                }
+
+                if (cursorstateX == 0 && cursorstateY == 0 && kstate.IsKeyDown(Keys.Z) && Attacks == false && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+                    Attacks = true;
+                    menutime = 20;
+                }
+                if (cursorstateX == 0 && cursorstateY == 0 && kstate.IsKeyDown(Keys.Z) && Attacks == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+                    Skeleton1.SetEnemyHP(getEnemyHP - Punch.GetAttackDamage());
+                    Attacks = false;
+                    menutime = 20;
+                    AttackAnimation = true;
+                    
+
+                }
+                if (AttackAnimation == true && PlayerTurn == true && menutime == 0 && kstate.IsKeyDown(Keys.Z) && EndingAnimation == false)
+                {
+                    PCHP = PCHP - Punch.GetAttackDamage();
+                    menutime = 20;
+                    PlayerTurn = false;
+                    AttackAnimation = false;
+                }
+                if (AttackAnimation == false && PlayerTurn == false && menutime == 0 && kstate.IsKeyDown(Keys.Z) && EndingAnimation == false)
+                {
+                    menutime = 20;
+                    PlayerTurn = true;
+                }
+
+            }
 
 
             // TODO: Add your update logic here
@@ -406,6 +547,66 @@ namespace VideoGameProject
         {
             GraphicsDevice.Clear(Color.Black);
             spriteBatch.Begin();
+
+            if (gamestate == "Battle")
+            {
+                spriteBatch.Draw(Skeleton, EnemyRect, Color.White);
+                spriteBatch.DrawString(font, "" + Enemies[1].GetEnemyName() + "Health: " + getEnemyHP, new Vector2(20, -10), Color.White); ;
+                spriteBatch.DrawString(font, "Health: " + PCHP, new Vector2(20, 450), Color.White);
+                spriteBatch.Draw(pixel, BattleMenuCeiling, Color.White);
+                spriteBatch.Draw(pixel, BattleMenuRightWall, Color.White);
+                spriteBatch.Draw(pixel, BattleMenuLeftWall, Color.White);
+                spriteBatch.Draw(pixel, BattleMenuFloor, Color.White);                
+                
+
+            }
+            if (gamestate == "Battle" && PlayerTurn == true && AttackAnimation == false)
+            {
+                spriteBatch.Draw(sword, swordcursor, Color.White);
+            }
+            if (gamestate == "Battle" && Attacks == false && Magic == false && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+            {
+                spriteBatch.DrawString(font, "Attack", new Vector2(300, 550), Color.White);
+                spriteBatch.DrawString(font, "Magic", new Vector2(700, 550), Color.White);
+                spriteBatch.DrawString(font, "Check", new Vector2(300, 650), Color.White);
+                spriteBatch.DrawString(font, "Flee", new Vector2(700, 650), Color.White);
+            }
+            if (gamestate == "Battle" && Attacks == true && Magic == false && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+            {
+                spriteBatch.DrawString(font, "Punch", new Vector2(300, 550), Color.White);
+                /*
+                spriteBatch.DrawString(font, "Magic", new Vector2(700, 550), Color.White);
+                spriteBatch.DrawString(font, "Check", new Vector2(300, 650), Color.White);
+                spriteBatch.DrawString(font, "Flee", new Vector2(700, 650), Color.White);
+                */
+
+            }
+            if (gamestate == "Battle" && Attacks == false && Magic == true && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+            {
+                spriteBatch.DrawString(font, "Fireball", new Vector2(300, 550), Color.White);
+                /*
+                 spriteBatch.DrawString(font, "Magic", new Vector2(700, 550), Color.White);
+                spriteBatch.DrawString(font, "Check", new Vector2(300, 650), Color.White);
+                spriteBatch.DrawString(font, "Flee", new Vector2(700, 650), Color.White);
+                */
+
+            }
+            if (gamestate == "Battle" && PlayerTurn == false && AttackAnimation == false && EndingAnimation == false)
+            {
+                spriteBatch.DrawString(font, "Skeleton attacks with: ", new Vector2(300, 550), Color.White);
+                spriteBatch.DrawString(font, "Punch for: " + Punch.GetAttackDamage() + " damage", new Vector2(300, 650), Color.White);
+            }
+            if (gamestate == "Battle" && PlayerTurn == true && AttackAnimation == true && EndingAnimation == false)
+            {
+                spriteBatch.DrawString(font, "You attack with: ", new Vector2(300, 550), Color.White);
+                spriteBatch.DrawString(font, "Punch for: " + Punch.GetAttackDamage() + " damage", new Vector2(300, 650), Color.White);
+            }
+            if (gamestate == "Battle" && EndingAnimation == true)
+            {
+                spriteBatch.DrawString(font, "You won!", new Vector2(300, 550), Color.White);
+                
+            }
+
 
             if (gamestate == "menu")
             {
@@ -442,6 +643,7 @@ namespace VideoGameProject
             if (gamestate == "overworld") //gamestate = overworld innebär att spelet är igång, då ska alltså menyn försvinna och karaktärer m.m ska kunna bli synliga. 
             {
                 spriteBatch.Draw(pixel, PC, Color.White);
+                spriteBatch.DrawString(font, "Level: " + Level, new Vector2(10, 10), Color.White);
                 spriteBatch.Draw(pixel, ArenamasterInteractRectEast, Color.White);
                 spriteBatch.Draw(pixel, ArenamasterInteractRectWest, Color.Green);
                 spriteBatch.Draw(pixel, ArenamasterInteractRectSouth, Color.Blue);
@@ -523,10 +725,10 @@ namespace VideoGameProject
                     spriteBatch.Draw(pixel, dialogueRightWall, Color.White);
                     spriteBatch.Draw(pixel, dialogueLeftWall, Color.White);
                     spriteBatch.Draw(pixel, dialogueFloor, Color.White);
-                    spriteBatch.DrawString(font, "hello", new Vector2(200, 455), Color.White);
-                    spriteBatch.DrawString(font, "Play", new Vector2(300, 550), Color.White);
-                    spriteBatch.DrawString(font, "Pet", new Vector2(700, 550), Color.White);
-                    spriteBatch.DrawString(font, "Talk", new Vector2(300, 650), Color.White);
+                    spriteBatch.DrawString(font, "Hello", new Vector2(200, 455), Color.White);
+                    spriteBatch.DrawString(font, "Talk", new Vector2(300, 550), Color.White);
+                    spriteBatch.DrawString(font, "Check", new Vector2(700, 550), Color.White);                    
+                    spriteBatch.DrawString(font, "Play", new Vector2(300, 650), Color.White);
                     spriteBatch.DrawString(font, "Back", new Vector2(700, 650), Color.White);
                     spriteBatch.Draw(sword, swordcursor, Color.White);
                 }
