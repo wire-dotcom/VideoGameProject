@@ -10,6 +10,7 @@ namespace VideoGameProject
     {
         private int AttackDamage;
         private int AttackChance;
+        private string AttackName;
         static int AttackAmount = 0;
 
         public Attacks(int ADMG, int ACHA)
@@ -37,5 +38,11 @@ namespace VideoGameProject
         public int GetAttackChance() { return AttackChance; }
 
         public static int GetAttackAmount() { return AttackAmount; }
+
+        public void SetAttackName(string newAttackName)
+        {
+            AttackName = newAttackName;
+        }
+        public string GetAttackName() { return AttackName; }
     }
 }
