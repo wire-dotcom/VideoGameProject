@@ -27,10 +27,7 @@ namespace VideoGameProject
         public Enemy() { EnemyAmount++; }
 
 
-        public void SetEnemyHP(int newEnemyHP)
-        {
-            EnemyHP = newEnemyHP;
-        }
+        public void SetEnemyHP(int newEnemyHP) { EnemyHP = newEnemyHP; }
         public int GetEnemyHP() { return EnemyHP; }
 
         public void SetEnemyAttack(int newEnemyAttack)
@@ -38,10 +35,7 @@ namespace VideoGameProject
             if (newEnemyAttack >= 0)
                 EnemyAttack = newEnemyAttack;
         }
-        public void SetEnemyName(string newEnemyName)
-        {
-            EnemyName = newEnemyName;
-        }
+        public void SetEnemyName(string newEnemyName){ EnemyName = newEnemyName; }
         public string GetEnemyName() { return EnemyName; }
         public int GetEnemyAttack() { return EnemyAttack; }
 

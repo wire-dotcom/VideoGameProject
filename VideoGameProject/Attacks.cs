@@ -12,6 +12,7 @@ namespace VideoGameProject
         private int AttackChance;
         private string AttackName;
         static int AttackAmount = 0;
+        public bool IsUnlocked;
 
         public Attacks(int ADMG, int ACHA)
         {
@@ -44,5 +45,8 @@ namespace VideoGameProject
             AttackName = newAttackName;
         }
         public string GetAttackName() { return AttackName; }
+
+        public void SetIsUnlocked(bool newIsUnlocked) { IsUnlocked = newIsUnlocked; }
+        public bool GetIsUnlocked() { return IsUnlocked; }
     }
 }

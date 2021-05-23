@@ -62,12 +62,13 @@ namespace VideoGameProject
         Texture2D ARENAMASTER_Stagnant_FacingWest;
         Texture2D ARENAMASTER_Stagnant_FacingEast;
         Texture2D ARENAMASTER_Stagnant_FacingNorth;
+        /*
         Rectangle ArenamasterRect = new Rectangle(400, 100, 115, 145);
         Rectangle ArenamasterRectHitbox = new Rectangle(410, 140, 90, 90);
         Rectangle ArenamasterInteractRectWest = new Rectangle(300, 100, 150, 150);
         Rectangle ArenamasterInteractRectEast = new Rectangle(450, 100, 150, 150);
         Rectangle ArenamasterInteractRectSouth = new Rectangle(380, 150, 150, 150);
-
+        */
         private SpriteFont font;
         string gamestate = "menu"; // string gamestate väljer vilket stadie spelet ska vara alltså i stort drag vad som ska ritas, det kan vara ett stadie för huvudmenyn eller ett stadie för när spelet är igång som vanligt.
         int cursorstateY = 0; // Y värde för pekaren.
@@ -100,6 +101,8 @@ namespace VideoGameProject
         Rectangle BattleMenuRightWall = new Rectangle(1150, 520, 10, 350);
         Rectangle BattleMenuLeftWall = new Rectangle(160, 520, 10, 350);
         Rectangle BattleMenuFloor = new Rectangle(160, 759, 1000, 10);
+        Rectangle ArenaRect = new Rectangle(300, 100, 300, 150);
+        Rectangle ShopRect = new Rectangle(800, 100, 300, 150);
 
 
         Rectangle PC = new Rectangle(400, 250, 100, 140);
@@ -370,10 +373,11 @@ namespace VideoGameProject
                 attacks[0].SetAttackName("Punch");
                 attacks[0].SetAttackDamage(2);
                 attacks[0].SetAttackChance(100);
+                attacks[0].SetIsUnlocked(true);                
 
 
 
-                if (PC.Intersects(ArenamasterInteractRectSouth) || PC.Intersects(ArenamasterInteractRectEast) || PC.Intersects(ArenamasterInteractRectWest))
+                if (PC.Intersects(ArenaRect))
                 {
                     if (kstate.IsKeyDown(Keys.Z) || kstate.IsKeyDown(Keys.Enter))
                     {
@@ -383,6 +387,7 @@ namespace VideoGameProject
                 }
                 if (dialogue == true)
                 {
+                    
 
                     if (cursordelay == true)
                     {
@@ -563,13 +568,14 @@ namespace VideoGameProject
 
                 if (cursorstateX == 0 && cursorstateY == 0 && kstate.IsKeyDown(Keys.Z) && Attacks == false && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
                 {
-                    SelectedAttack = 0;
+                    
                     Attacks = true;
                     menutime = 20;
                 }
 
                 if (cursorstateX == 0 && cursorstateY == 0 && kstate.IsKeyDown(Keys.Z) && Attacks == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
                 {
+                    SelectedAttack = 0;
                     Enemies[SelectedEnemy].SetEnemyHP(getEnemyHP - PCBaseDamage * attacks[SelectedAttack].GetAttackDamage());
                     Attacks = false;
                     menutime = 20;
@@ -647,7 +653,8 @@ namespace VideoGameProject
             }
             if (gamestate == "Battle" && Attacks == true && Magic == false && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
             {
-                spriteBatch.DrawString(font, "" + attacks[0].GetAttackName(), new Vector2(300, 550), Color.White) ;
+                 if (attacks[0].GetIsUnlocked() == true)
+                    spriteBatch.DrawString(font, "" + attacks[0].GetAttackName(), new Vector2(300, 550), Color.White);
                 /*
                 spriteBatch.DrawString(font, "Magic", new Vector2(700, 550), Color.White);
                 spriteBatch.DrawString(font, "Check", new Vector2(300, 650), Color.White);
@@ -729,16 +736,20 @@ namespace VideoGameProject
             {
                 spriteBatch.Draw(pixel, PC, Color.Transparent);
                 spriteBatch.DrawString(font, "Level: " + Level, new Vector2(10, 10), Color.White);
-                spriteBatch.Draw(pixel, ArenamasterInteractRectEast, Color.Transparent);
-                spriteBatch.Draw(pixel, ArenamasterInteractRectWest, Color.Transparent);    
-                spriteBatch.Draw(pixel, ArenamasterInteractRectSouth, Color.Transparent);
-                spriteBatch.Draw(pixel, ArenamasterRectHitbox, Color.Transparent);
-                if (PC.Y > ArenamasterRect.Y)
-                spriteBatch.Draw(ARENAMASTER_Stagnant_FacingSouth, ArenamasterRect, Color.White);
-                if (PC.X >= ArenamasterRect.X && PC.Y <= ArenamasterRect.Y)
-                    spriteBatch.Draw(ARENAMASTER_Stagnant_FacingEast, ArenamasterRect, Color.White);
-                if (PC.X <= ArenamasterRect.X && PC.Y <= ArenamasterRect.Y)
-                    spriteBatch.Draw(ARENAMASTER_Stagnant_FacingWest, ArenamasterRect, Color.White);
+                //spriteBatch.Draw(pixel, ArenamasterInteractRectEast, Color.Transparent);
+                //spriteBatch.Draw(pixel, ArenamasterInteractRectWest, Color.Transparent);    
+                //spriteBatch.Draw(pixel, ArenamasterInteractRectSouth, Color.Transparent);
+                //spriteBatch.Draw(pixel, ArenamasterRectHitbox, Color.Transparent);
+                spriteBatch.Draw(pixel, ArenaRect, Color.OrangeRed);
+                spriteBatch.DrawString(font, "Arena", new Vector2(350, 130), Color.White);
+                spriteBatch.Draw(pixel, ShopRect, Color.BlueViolet);
+                spriteBatch.DrawString(font, "Shop", new Vector2(870, 130), Color.White);
+                //if (PC.Y > ArenamasterRect.Y)
+                //spriteBatch.Draw(ARENAMASTER_Stagnant_FacingSouth, ArenamasterRect, Color.White);
+                //if (PC.X >= ArenamasterRect.X && PC.Y <= ArenamasterRect.Y)
+                    //spriteBatch.Draw(ARENAMASTER_Stagnant_FacingEast, ArenamasterRect, Color.White);
+                //if (PC.X <= ArenamasterRect.X && PC.Y <= ArenamasterRect.Y)
+                    //spriteBatch.Draw(ARENAMASTER_Stagnant_FacingWest, ArenamasterRect, Color.White);
 
 
 
