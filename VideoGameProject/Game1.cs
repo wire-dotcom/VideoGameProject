@@ -82,9 +82,16 @@ namespace VideoGameProject
         bool fullscreen = false;
         bool dialogue = false;
         bool selected = false;
+        bool SelectedAttackBool = false;
+        bool PlayerDealtDamage = false;
+        bool EnemyDealtDamage = false;
         int SelectedEnemy = 0;
         int SelectedAttack = 0;
-        
+
+        int defaultEnemyAttack0 = 2;
+        int defaultEnemyAttack1 = 4;
+        int defaultEnemyAttack2 = 8;
+
         public List<Rectangle> PCHitbox = new List<Rectangle>();
         Rectangle swordcursor = new Rectangle(515, 250, 50, 50);
         Rectangle backgroundRect = new Rectangle(0, 0, 1366, 768);
@@ -126,17 +133,25 @@ namespace VideoGameProject
         int EnemyMaxHealth;
         bool EnemyMaxHealthSet = false;
         int getEnemyHP;
+        int SelectedEnemyAttack;
+        Random r = new Random();
+
         
 
         List<Enemy> Enemies = new List<Enemy>();
-        Enemy Skeleton1 = new Enemy();
-        Enemy Goblin1 = new Enemy();
-        Enemy Orc1 = new Enemy();
+        Enemy enemy0 = new Enemy();
+        Enemy enemy1 = new Enemy();
+        Enemy enemy2 = new Enemy();
 
 
 
         List<Attacks> attacks = new List<Attacks>();
-        Attacks Punch = new Attacks();
+        Attacks attack0 = new Attacks();
+        Attacks attack1 = new Attacks();
+        Attacks attack2 = new Attacks();
+        Attacks attack3 = new Attacks();
+        Attacks attack4 = new Attacks();
+        Attacks attack5 = new Attacks();
         
 
         public Game1()
@@ -147,12 +162,17 @@ namespace VideoGameProject
             graphics.PreferredBackBufferWidth = 1366;
             graphics.PreferredBackBufferHeight = 768;
             PCHitbox.Add(new Rectangle(0, 0, 25, 25));
-            Enemies.Add(Skeleton1);
-            Enemies.Add(Goblin1);
-            Enemies.Add(Orc1);
+            Enemies.Add(enemy0);
+            Enemies.Add(enemy1);
+            Enemies.Add(enemy2);
 
 
-            attacks.Add(Punch);
+            attacks.Add(attack0);
+            attacks.Add(attack1);
+            attacks.Add(attack2);
+            attacks.Add(attack3);
+            attacks.Add(attack4);
+            attacks.Add(attack5);
         }
 
         /// <summary>
@@ -256,7 +276,7 @@ namespace VideoGameProject
             
 
             getEnemyHP = Enemies[SelectedEnemy].GetEnemyHP();
-            Punch.SetAttackDamage(2);
+            
 
 
             if (gamestate == "menu")
@@ -357,23 +377,50 @@ namespace VideoGameProject
 
 
                 // Värden för enemies. Bestäms i "gamestate == "overworld"" eftersom dem inte ska konstant ändras i "gamestate = "Battle"".
-                Enemies[0].SetEnemyAttack(2);
+                Enemies[0].SetEnemyAttack(2);                
                 Enemies[0].SetEnemyHP(20);
+                Enemies[0].SetEnemyAttackRange(2); // Attack range 2 innebär att fienden kan välja mellan attacks[0] och attacks[1]
                 Enemies[0].SetEnemyName("Skeleton");
-                Enemies[1].SetEnemyAttack(4);
+                Enemies[1].SetEnemyAttack(4);                
                 Enemies[1].SetEnemyHP(40);
+                Enemies[1].SetEnemyAttackRange(3);
                 Enemies[1].SetEnemyName("Goblin");
-                Enemies[2].SetEnemyAttack(8);
+                Enemies[2].SetEnemyAttack(8);                
+                Enemies[2].SetEnemyAttackRange(4);
                 Enemies[2].SetEnemyHP(40);
                 Enemies[2].SetEnemyName("Orc");
+
+                
 
 
 
                 // Värden för Attacks.
                 attacks[0].SetAttackName("Punch");
                 attacks[0].SetAttackDamage(2);
-                attacks[0].SetAttackChance(100);
-                attacks[0].SetIsUnlocked(true);                
+                attacks[0].SetAttackChance(80);
+                attacks[0].SetIsUnlocked(true);
+                attacks[1].SetAttackName("Kick");
+                attacks[1].SetAttackDamage(4);
+                attacks[1].SetAttackChance(50);
+                attacks[1].SetIsUnlocked(true);
+                attacks[2].SetAttackName("Arrow");
+                attacks[2].SetAttackDamage(1);
+                attacks[2].SetAttackChance(100);                
+                attacks[2].SetIsUnlocked(true);
+                attacks[3].SetAttackName("Fireball");
+                attacks[3].SetAttackDamage(6);
+                attacks[3].SetAttackChance(100);
+                attacks[3].SetIsUnlocked(true);
+                attacks[4].SetAttackName("Heal");
+                attacks[4].SetAttackDamage(-3);
+                attacks[4].SetAttackChance(100);
+                attacks[4].SetIsUnlocked(true);
+                attacks[4].SetAttackName("KILL");
+                attacks[4].SetAttackDamage(10000);
+                attacks[4].SetAttackChance(1);
+                attacks[4].SetIsUnlocked(false);
+
+                
 
 
 
@@ -383,6 +430,7 @@ namespace VideoGameProject
                     {
                         dialogue = true;
                         cursordelay = true;
+                        cursorstateY = 1;
                     }
                 }
                 if (dialogue == true)
@@ -392,7 +440,7 @@ namespace VideoGameProject
                     if (cursordelay == true)
                     {
                         cursortime++;
-                        if (cursortime > 10)
+                        if (cursortime > 20)
                         {
                             cursortime = 0;
                             cursordelay = false;
@@ -407,17 +455,21 @@ namespace VideoGameProject
                     {
                         cursorstateX--;
                         cursordelay = true;
+                        
                     }
+                    /*
                     if (kstate.IsKeyDown(Keys.Down) && cursorstateY < 1 && cursortime == 0)
                     {
                         cursorstateY++;
                         cursordelay = true;
                     }
+                    
                     if (kstate.IsKeyDown(Keys.Up) && cursorstateY > 0 && cursortime == 0)
                     {
                         cursorstateY--;
                         cursordelay = true;
                     }
+                    */
                     if (cursorstateX == 1 && cursorstateY == 0)
                     {
                         swordcursor.Y = 565;
@@ -440,19 +492,22 @@ namespace VideoGameProject
                     }
                     if (kstate.IsKeyDown(Keys.Enter) || kstate.IsKeyDown(Keys.Z))
                     {
-                        if (cursorstateX == 1 && cursorstateY == 1)
+                        if (cursortime == 0)
                         {
+                            if (cursorstateX == 1 && cursorstateY == 1)
+                            {
+                                dialogue = false;
+                            }
+                            if (cursorstateX == 0 && cursorstateY == 1)
+                            {
+                                SelectedEnemy = r.Next(0, 3);
+                                gamestate = "Battle";
 
-                            dialogue = false;
-                        }
-                        if (cursorstateX == 0 && cursorstateY == 1)
-                        {
-                            gamestate = "Battle";
-                            
-                        }
-                        if (cursorstateX == 1 && cursorstateY == 0)
-                        {
-                            SelectedEnemy = 1;
+                            }
+                            if (cursorstateX == 1 && cursorstateY == 0)
+                            {
+                                
+                            }
                         }
                     }
 
@@ -500,11 +555,13 @@ namespace VideoGameProject
             {
                 if (Enemies[SelectedEnemy].GetEnemyHP() <= 0)
                 {
-                    EndingAnimation = true;
-                    
                     PC.X = 400;
                     PC.Y = 250;
+                    EndingAnimation = true;                    
+                    
                 }
+                //if (PCHP <= 0)
+                    //Exit();
 
                 if (EndingAnimation == true && kstate.IsKeyDown(Keys.Z) && menutime == 0)
                     gamestate = "overworld";
@@ -567,33 +624,130 @@ namespace VideoGameProject
                 }
 
                 if (cursorstateX == 0 && cursorstateY == 0 && kstate.IsKeyDown(Keys.Z) && Attacks == false && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
-                {
-                    
+                {                    
                     Attacks = true;
+                    menutime = 20;
+                }
+                if (cursorstateX == 1 && cursorstateY == 0 && kstate.IsKeyDown(Keys.Z) && Attacks == false && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+                    Magic = true;
                     menutime = 20;
                 }
 
                 if (cursorstateX == 0 && cursorstateY == 0 && kstate.IsKeyDown(Keys.Z) && Attacks == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
                 {
+                    
                     SelectedAttack = 0;
-                    Enemies[SelectedEnemy].SetEnemyHP(getEnemyHP - PCBaseDamage * attacks[SelectedAttack].GetAttackDamage());
+                    SelectedAttackBool = true;
+
+                }
+                if (cursorstateX == 1 && cursorstateY == 0 && kstate.IsKeyDown(Keys.Z) && Attacks == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+                    SelectedAttack = 1;
+                    SelectedAttackBool = true;
+
+                }
+                if (cursorstateX == 0 && cursorstateY == 1 && kstate.IsKeyDown(Keys.Z) && Attacks == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+                    SelectedAttack = 2;
+                    SelectedAttackBool = true;
+
+                }
+                if (cursorstateX == 1 && cursorstateY == 1 && kstate.IsKeyDown(Keys.Z) && Attacks == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
                     Attacks = false;
+
+                }
+                if (cursorstateX == 0 && cursorstateY == 0 && kstate.IsKeyDown(Keys.Z) && Magic == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+
+                    SelectedAttack = 3;
+                    SelectedAttackBool = true;
+
+                }
+                if (cursorstateX == 1 && cursorstateY == 0 && kstate.IsKeyDown(Keys.Z) && Magic == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+                    SelectedAttack = 4;
+                    SelectedAttackBool = true;
+
+                }
+                if (cursorstateX == 0 && cursorstateY == 1 && kstate.IsKeyDown(Keys.Z) && Magic == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+                    SelectedAttack = 5;
+                    SelectedAttackBool = true;
+
+                }
+                if (cursorstateX == 1 && cursorstateY == 1 && kstate.IsKeyDown(Keys.Z) && Magic == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+                    Magic = false;
+                    
+
+                }
+
+                if (SelectedAttackBool == true)
+                {
+                    int AttackHit = r.Next(0, 101); // vill generera ett slumpmässigt nummer från 0 till 100, attacker som har 100 i Chance borde inte kunna missa
+                    if (attacks[SelectedAttack].GetAttackChance() > AttackHit)
+                    {
+                        PlayerDealtDamage = true;
+                        if (attacks[SelectedAttack].GetAttackDamage() > 0)
+                        {
+                            Enemies[SelectedEnemy].SetEnemyHP(getEnemyHP - PCBaseDamage * attacks[SelectedAttack].GetAttackDamage());
+                            
+
+                        }
+                        if (attacks[SelectedAttack].GetAttackDamage() == 0)
+                        {
+                            int EnemyCurrentAttack = Enemies[SelectedEnemy].GetEnemyAttack();
+                            EnemyCurrentAttack -= 3;
+                            Enemies[SelectedEnemy].SetEnemyAttack(EnemyCurrentAttack);
+                        }
+
+                    }
+
+
+                    Attacks = false;
+                    Magic = false;
                     menutime = 20;
                     AttackAnimation = true;
+                    PCBaseDamage = 4;
                     if (getEnemyHP < 0)
                         getEnemyHP = 0;
-
+                    SelectedAttackBool = false;
                 }
                 if (AttackAnimation == true && PlayerTurn == true && menutime == 0 && kstate.IsKeyDown(Keys.Z) && EndingAnimation == false)
                 {
-                    PCHP = PCHP - (Skeleton1.GetEnemyAttack() * Punch.GetAttackDamage());
+
+                    SelectedEnemyAttack = r.Next(0, Enemies[SelectedEnemy].GetEnemyAttackRange());
+                    int EnemyHit = r.Next(0, 101);
+                    if (attacks[SelectedEnemyAttack].GetAttackChance() > EnemyHit)
+                    {
+                        EnemyDealtDamage = true;
+                        if (attacks[SelectedEnemyAttack].GetAttackDamage() > 0)
+                        {
+                            PCHP = PCHP - (Enemies[SelectedEnemy].GetEnemyAttack() * attacks[SelectedEnemyAttack].GetAttackDamage());
+                        }
+                        if (attacks[SelectedEnemyAttack].GetAttackDamage() == 0)
+                        {
+                            PCBaseDamage -= 3;
+
+                        }
+                    }
                     menutime = 20;
                     PlayerTurn = false;
                     AttackAnimation = false;
                 }
                 if (AttackAnimation == false && PlayerTurn == false && menutime == 0 && kstate.IsKeyDown(Keys.Z) && EndingAnimation == false)
                 {
+                    if (SelectedEnemy == 0)
+                        Enemies[SelectedEnemy].SetEnemyAttack(defaultEnemyAttack0);
+                    if (SelectedEnemy == 1)
+                        Enemies[SelectedEnemy].SetEnemyAttack(defaultEnemyAttack1);
+                    if (SelectedEnemy == 2)
+                        Enemies[SelectedEnemy].SetEnemyAttack(defaultEnemyAttack2);
                     menutime = 20;
+                    PlayerDealtDamage = false;
+                    EnemyDealtDamage = false;
                     PlayerTurn = true;
                 }
 
@@ -653,35 +807,50 @@ namespace VideoGameProject
             }
             if (gamestate == "Battle" && Attacks == true && Magic == false && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
             {
-                 if (attacks[0].GetIsUnlocked() == true)
+                if (attacks[0].GetIsUnlocked() == true)
                     spriteBatch.DrawString(font, "" + attacks[0].GetAttackName(), new Vector2(300, 550), Color.White);
-                /*
-                spriteBatch.DrawString(font, "Magic", new Vector2(700, 550), Color.White);
-                spriteBatch.DrawString(font, "Check", new Vector2(300, 650), Color.White);
-                spriteBatch.DrawString(font, "Flee", new Vector2(700, 650), Color.White);
-                */
+                if (attacks[1].GetIsUnlocked() == true)
+                spriteBatch.DrawString(font, "" + attacks[1].GetAttackName(), new Vector2(700, 550), Color.White);
+                if (attacks[2].GetIsUnlocked() == true)
+                spriteBatch.DrawString(font, "" + attacks[2].GetAttackName(), new Vector2(300, 650), Color.White);
+                spriteBatch.DrawString(font, "Back", new Vector2(700, 650), Color.White);
+                
 
             }
             if (gamestate == "Battle" && Attacks == false && Magic == true && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
             {
-                spriteBatch.DrawString(font, "Fireball", new Vector2(300, 550), Color.White);
-                /*
-                 spriteBatch.DrawString(font, "Magic", new Vector2(700, 550), Color.White);
-                spriteBatch.DrawString(font, "Check", new Vector2(300, 650), Color.White);
-                spriteBatch.DrawString(font, "Flee", new Vector2(700, 650), Color.White);
-                */
+                if (attacks[3].GetIsUnlocked() == true)
+                spriteBatch.DrawString(font, "" + attacks[3].GetAttackName(), new Vector2(300, 550), Color.White);
+                if (attacks[4].GetIsUnlocked() == true)
+                 spriteBatch.DrawString(font, "" + attacks[4].GetAttackName(), new Vector2(700, 550), Color.White);
+                if (attacks[5].GetIsUnlocked() == true)
+                spriteBatch.DrawString(font, "" + attacks[5].GetAttackName(), new Vector2(300, 650), Color.White);
+                
+                spriteBatch.DrawString(font, "Back", new Vector2(700, 650), Color.White);
+                
                 
             }
-            if (gamestate == "Battle" && PlayerTurn == false && AttackAnimation == false && EndingAnimation == false)
+            if (gamestate == "Battle" && PlayerTurn == false && AttackAnimation == false && EndingAnimation == false && EnemyDealtDamage == true)
             {
                 spriteBatch.DrawString(font, "" + Enemies[SelectedEnemy].GetEnemyName() + " attacks with: ", new Vector2(300, 550), Color.White);
-                spriteBatch.DrawString(font, "" + attacks[SelectedAttack].GetAttackName() +  "for: " + Punch.GetAttackDamage() * Enemies[SelectedEnemy].GetEnemyAttack() + " damage", new Vector2(300, 650), Color.White);
+                spriteBatch.DrawString(font, "" + attacks[SelectedEnemyAttack].GetAttackName() +  " for: " + attacks[SelectedEnemyAttack].GetAttackDamage() * Enemies[SelectedEnemy].GetEnemyAttack() + " damage", new Vector2(300, 650), Color.White);
             }
-            if (gamestate == "Battle" && PlayerTurn == true && AttackAnimation == true && EndingAnimation == false)
+            if (gamestate == "Battle" && PlayerTurn == false && AttackAnimation == false && EndingAnimation == false && EnemyDealtDamage == false)
+            {
+                spriteBatch.DrawString(font, "" + Enemies[SelectedEnemy].GetEnemyName() + " attacks with: ", new Vector2(300, 550), Color.White);
+                spriteBatch.DrawString(font, "" + attacks[SelectedEnemyAttack].GetAttackName() + " but it failed", new Vector2(300, 650), Color.White);
+            }
+            if (gamestate == "Battle" && PlayerTurn == true && AttackAnimation == true && EndingAnimation == false && PlayerDealtDamage == true)
             {
                 spriteBatch.DrawString(font, "You attack with: ", new Vector2(300, 550), Color.White);
-                spriteBatch.DrawString(font, "" + attacks[SelectedAttack].GetAttackName() + " for: " + Punch.GetAttackDamage() * PCBaseDamage + " damage", new Vector2(300, 650), Color.White);
+                spriteBatch.DrawString(font, "" + attacks[SelectedAttack].GetAttackName() + " for: " + attacks[SelectedAttack].GetAttackDamage() * PCBaseDamage + " damage", new Vector2(300, 650), Color.White);
             }
+            if (gamestate == "Battle" && PlayerTurn == true && AttackAnimation == true && EndingAnimation == false && PlayerDealtDamage == false)
+            {
+                spriteBatch.DrawString(font, "You attack with: ", new Vector2(300, 550), Color.White);
+                spriteBatch.DrawString(font, "" + attacks[SelectedAttack].GetAttackName() + " but it failed", new Vector2(300, 650), Color.White);
+            }
+
             if (gamestate == "Battle" && EndingAnimation == true)
             {
                 spriteBatch.DrawString(font, "You won!", new Vector2(300, 550), Color.White);
@@ -821,7 +990,7 @@ namespace VideoGameProject
                     spriteBatch.Draw(pixel, dialogueRightWall, Color.White);
                     spriteBatch.Draw(pixel, dialogueLeftWall, Color.White);
                     spriteBatch.Draw(pixel, dialogueFloor, Color.White);
-                    spriteBatch.DrawString(font, "Arenamaster", new Vector2(200, 455), Color.White);
+                    spriteBatch.DrawString(font, "ENTER THE ARENA", new Vector2(200, 455), Color.White);
                     spriteBatch.DrawString(font, "Talk", new Vector2(300, 550), Color.White);
                     spriteBatch.DrawString(font, "Check", new Vector2(700, 550), Color.White);                    
                     spriteBatch.DrawString(font, "Interact", new Vector2(300, 650), Color.White);

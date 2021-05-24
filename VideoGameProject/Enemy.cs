@@ -13,6 +13,7 @@ namespace VideoGameProject
     {
         private int EnemyHP;
         private int EnemyAttack;
+        private int EnemyAttackRange;
         private string EnemyName;
         static int EnemyAmount = 0;
 
@@ -40,6 +41,12 @@ namespace VideoGameProject
         public int GetEnemyAttack() { return EnemyAttack; }
 
         public static int GetEnemyAmount() { return EnemyAmount; }
+
+        public void SetEnemyAttackRange(int newEnemyAttackRange)
+        {
+            EnemyAttackRange = newEnemyAttackRange;
+        }
+        public int GetEnemyAttackRange() { return EnemyAttackRange; }
 
     }
 }
