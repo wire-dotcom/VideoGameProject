@@ -112,6 +112,7 @@ namespace VideoGameProject
         Rectangle BattleMenuFloor = new Rectangle(160, 759, 1000, 10);
         Rectangle ArenaRect = new Rectangle(300, 100, 300, 150);
         Rectangle ShopRect = new Rectangle(800, 100, 300, 150);
+        
 
 
         Rectangle PC = new Rectangle(400, 250, 100, 140);
@@ -427,9 +428,23 @@ namespace VideoGameProject
                     if (kstate.IsKeyDown(Keys.Z) || kstate.IsKeyDown(Keys.Enter))
                     {
                         if (menutime == 0)
-                        dialogue = true;
-                        cursordelay = true;
-                        cursorstateY = 1;
+                        {
+                            dialogue = true;
+                            cursordelay = true;
+                            cursorstateY = 1;
+                        }
+                    }
+                }
+                if (PC.Intersects(ShopRect))
+                {
+                    if (kstate.IsKeyDown(Keys.Z) || kstate.IsKeyDown(Keys.Enter))
+                    {
+                        if (menutime == 0)
+                        {
+                            dialogue = true;
+                            cursordelay = true;
+                            cursorstateY = 1;
+                        }
                     }
                 }
                 if (dialogue == true)
@@ -498,7 +513,7 @@ namespace VideoGameProject
                                 menutime = 20;
                                 dialogue = false;
                             }
-                            if (cursorstateX == 0 && cursorstateY == 1)
+                            if (cursorstateX == 0 && cursorstateY == 1 && PCpos.X < 700)
                             {
                                 SelectedEnemy = r.Next(0, 3);
                                 GoldReward = r.Next(0, SelectedEnemy + 1 * 10);
@@ -506,14 +521,15 @@ namespace VideoGameProject
                                 gamestate = "Battle";
 
                             }
-                            if (cursorstateX == 1 && cursorstateY == 0)
+                            else if (cursorstateX == 0 && cursorstateY == 1 && PCpos.X > 700)
                             {
-                                
+                                gamestate = "Shop";
                             }
                         }
                     }
 
                 }          
+
 
                 if (kstate.IsKeyDown(Keys.Down) && kstate.IsKeyUp(Keys.Up) && dialogue == false)
                 {
@@ -568,8 +584,8 @@ namespace VideoGameProject
                 if (EndingAnimation == true && kstate.IsKeyDown(Keys.Z) && menutime == 0)
                 {
                     gamestate = "overworld";
-                    PC.X = 400;
-                    PC.Y = 250;
+                    PCpos.X = 400;
+                    PCpos.Y = 250;
                     dialogue = false;
                     Gold += GoldReward;
                     Experience += ExperienceReward;
