@@ -87,6 +87,8 @@ namespace VideoGameProject
         bool EnemyDealtDamage = false;
         int SelectedEnemy = 0;
         int SelectedAttack = 0;
+        int TurnPlayerDamage;
+        int TurnEnemyDamage; 
 
         int defaultEnemyAttack0 = 2;
         int defaultEnemyAttack1 = 4;
@@ -128,7 +130,10 @@ namespace VideoGameProject
         int PCHP = 100;
         int PCMANA = 50;
         int PCBaseDamage;
-        int Experience;
+        int Experience = 0;
+        int ExperienceReward;
+        int Gold = 0;
+        int GoldReward;
         int ExperienceRequired = 100;
         int EnemyMaxHealth;
         bool EnemyMaxHealthSet = false;
@@ -158,7 +163,7 @@ namespace VideoGameProject
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            graphics.IsFullScreen = true;            
+            graphics.IsFullScreen = false;            
             graphics.PreferredBackBufferWidth = 1366;
             graphics.PreferredBackBufferHeight = 768;
             PCHitbox.Add(new Rectangle(0, 0, 25, 25));
@@ -360,20 +365,13 @@ namespace VideoGameProject
                 if (Experience >= ExperienceRequired)
                 {
                     Level++;
-                    Experience = 0;
-                    ExperienceRequired += 50;
+                    Experience -= ExperienceRequired;
+                    ExperienceRequired += 50 + 4 * Level;
                 }
 
-                if (Level == 0)
-                {
-                    PCBaseDamage = 4;
-                    PCHP = 20;
-                }
-                if (Level == 1)
-                {
-                    PCBaseDamage = 10;
-                    PCHP = 40;
-                }
+                PCBaseDamage = 4 + Level;
+                PCHP = 20 + 5 * Level;
+
 
 
                 // Värden för enemies. Bestäms i "gamestate == "overworld"" eftersom dem inte ska konstant ändras i "gamestate = "Battle"".
@@ -381,13 +379,13 @@ namespace VideoGameProject
                 Enemies[0].SetEnemyHP(20);
                 Enemies[0].SetEnemyAttackRange(2); // Attack range 2 innebär att fienden kan välja mellan attacks[0] och attacks[1]
                 Enemies[0].SetEnemyName("Skeleton");
-                Enemies[1].SetEnemyAttack(4);                
-                Enemies[1].SetEnemyHP(40);
+                Enemies[1].SetEnemyAttack(3);                
+                Enemies[1].SetEnemyHP(25);
                 Enemies[1].SetEnemyAttackRange(3);
                 Enemies[1].SetEnemyName("Goblin");
-                Enemies[2].SetEnemyAttack(8);                
+                Enemies[2].SetEnemyAttack(4);                
                 Enemies[2].SetEnemyAttackRange(4);
-                Enemies[2].SetEnemyHP(40);
+                Enemies[2].SetEnemyHP(30);
                 Enemies[2].SetEnemyName("Orc");
 
                 
@@ -428,6 +426,7 @@ namespace VideoGameProject
                 {
                     if (kstate.IsKeyDown(Keys.Z) || kstate.IsKeyDown(Keys.Enter))
                     {
+                        if (menutime == 0)
                         dialogue = true;
                         cursordelay = true;
                         cursorstateY = 1;
@@ -496,11 +495,14 @@ namespace VideoGameProject
                         {
                             if (cursorstateX == 1 && cursorstateY == 1)
                             {
+                                menutime = 20;
                                 dialogue = false;
                             }
                             if (cursorstateX == 0 && cursorstateY == 1)
                             {
                                 SelectedEnemy = r.Next(0, 3);
+                                GoldReward = r.Next(0, SelectedEnemy + 1 * 10);
+                                ExperienceReward = r.Next(40, 100);
                                 gamestate = "Battle";
 
                             }
@@ -555,17 +557,23 @@ namespace VideoGameProject
             {
                 if (Enemies[SelectedEnemy].GetEnemyHP() <= 0)
                 {
-                    PC.X = 400;
-                    PC.Y = 250;
+                    int AttackHit = r.Next(0, 101);
+                    
                     EndingAnimation = true;                    
                     
                 }
                 //if (PCHP <= 0)
-                    //Exit();
+                //Exit();
 
                 if (EndingAnimation == true && kstate.IsKeyDown(Keys.Z) && menutime == 0)
+                {
                     gamestate = "overworld";
-                            
+                    PC.X = 400;
+                    PC.Y = 250;
+                    dialogue = false;
+                    Gold += GoldReward;
+                    Experience += ExperienceReward;
+                }          
 
                 if (EnemyMaxHealthSet == false)
                 {
@@ -692,16 +700,19 @@ namespace VideoGameProject
                         PlayerDealtDamage = true;
                         if (attacks[SelectedAttack].GetAttackDamage() > 0)
                         {
-                            Enemies[SelectedEnemy].SetEnemyHP(getEnemyHP - PCBaseDamage * attacks[SelectedAttack].GetAttackDamage());
+                            TurnPlayerDamage = PCBaseDamage * attacks[SelectedAttack].GetAttackDamage();
+                            Enemies[SelectedEnemy].SetEnemyHP(getEnemyHP - TurnPlayerDamage);
                             
 
                         }
+                        /*
                         if (attacks[SelectedAttack].GetAttackDamage() == 0)
                         {
                             int EnemyCurrentAttack = Enemies[SelectedEnemy].GetEnemyAttack();
                             EnemyCurrentAttack -= 3;
                             Enemies[SelectedEnemy].SetEnemyAttack(EnemyCurrentAttack);
                         }
+                        */
 
                     }
 
@@ -725,13 +736,16 @@ namespace VideoGameProject
                         EnemyDealtDamage = true;
                         if (attacks[SelectedEnemyAttack].GetAttackDamage() > 0)
                         {
-                            PCHP = PCHP - (Enemies[SelectedEnemy].GetEnemyAttack() * attacks[SelectedEnemyAttack].GetAttackDamage());
+                            TurnEnemyDamage = Enemies[SelectedEnemy].GetEnemyAttack() * attacks[SelectedEnemyAttack].GetAttackDamage();
+                            PCHP = PCHP - TurnEnemyDamage;
                         }
+                        /*
                         if (attacks[SelectedEnemyAttack].GetAttackDamage() == 0)
                         {
                             PCBaseDamage -= 3;
 
                         }
+                        */
                     }
                     menutime = 20;
                     PlayerTurn = false;
@@ -833,7 +847,7 @@ namespace VideoGameProject
             if (gamestate == "Battle" && PlayerTurn == false && AttackAnimation == false && EndingAnimation == false && EnemyDealtDamage == true)
             {
                 spriteBatch.DrawString(font, "" + Enemies[SelectedEnemy].GetEnemyName() + " attacks with: ", new Vector2(300, 550), Color.White);
-                spriteBatch.DrawString(font, "" + attacks[SelectedEnemyAttack].GetAttackName() +  " for: " + attacks[SelectedEnemyAttack].GetAttackDamage() * Enemies[SelectedEnemy].GetEnemyAttack() + " damage", new Vector2(300, 650), Color.White);
+                spriteBatch.DrawString(font, "" + attacks[SelectedEnemyAttack].GetAttackName() +  " for: " + TurnEnemyDamage + " damage", new Vector2(300, 650), Color.White);
             }
             if (gamestate == "Battle" && PlayerTurn == false && AttackAnimation == false && EndingAnimation == false && EnemyDealtDamage == false)
             {
@@ -843,7 +857,7 @@ namespace VideoGameProject
             if (gamestate == "Battle" && PlayerTurn == true && AttackAnimation == true && EndingAnimation == false && PlayerDealtDamage == true)
             {
                 spriteBatch.DrawString(font, "You attack with: ", new Vector2(300, 550), Color.White);
-                spriteBatch.DrawString(font, "" + attacks[SelectedAttack].GetAttackName() + " for: " + attacks[SelectedAttack].GetAttackDamage() * PCBaseDamage + " damage", new Vector2(300, 650), Color.White);
+                spriteBatch.DrawString(font, "" + attacks[SelectedAttack].GetAttackName() + " for: " + TurnPlayerDamage + " damage", new Vector2(300, 650), Color.White);
             }
             if (gamestate == "Battle" && PlayerTurn == true && AttackAnimation == true && EndingAnimation == false && PlayerDealtDamage == false)
             {
@@ -854,6 +868,7 @@ namespace VideoGameProject
             if (gamestate == "Battle" && EndingAnimation == true)
             {
                 spriteBatch.DrawString(font, "You won!", new Vector2(300, 550), Color.White);
+                spriteBatch.DrawString(font, "Got: " + ExperienceReward + " Exp + " + GoldReward + " Gold", new Vector2(300, 650), Color.White);
             }
             if (gamestate == "Battle" && EndingAnimation == true && SelectedEnemy == 0)
             {
@@ -904,7 +919,8 @@ namespace VideoGameProject
             if (gamestate == "overworld") //gamestate = overworld innebär att spelet är igång, då ska alltså menyn försvinna och karaktärer m.m ska kunna bli synliga. 
             {
                 spriteBatch.Draw(pixel, PC, Color.Transparent);
-                spriteBatch.DrawString(font, "Level: " + Level, new Vector2(10, 10), Color.White);
+                spriteBatch.DrawString(font, "Level:" + Level + " Exp:" + Experience, new Vector2(10, 10), Color.White);
+                spriteBatch.DrawString(font, "Gold:" + Gold, new Vector2(10, 110), Color.White);
                 //spriteBatch.Draw(pixel, ArenamasterInteractRectEast, Color.Transparent);
                 //spriteBatch.Draw(pixel, ArenamasterInteractRectWest, Color.Transparent);    
                 //spriteBatch.Draw(pixel, ArenamasterInteractRectSouth, Color.Transparent);
@@ -990,10 +1006,10 @@ namespace VideoGameProject
                     spriteBatch.Draw(pixel, dialogueRightWall, Color.White);
                     spriteBatch.Draw(pixel, dialogueLeftWall, Color.White);
                     spriteBatch.Draw(pixel, dialogueFloor, Color.White);
-                    spriteBatch.DrawString(font, "ENTER THE ARENA", new Vector2(200, 455), Color.White);
-                    spriteBatch.DrawString(font, "Talk", new Vector2(300, 550), Color.White);
-                    spriteBatch.DrawString(font, "Check", new Vector2(700, 550), Color.White);                    
-                    spriteBatch.DrawString(font, "Interact", new Vector2(300, 650), Color.White);
+                    spriteBatch.DrawString(font, "WELCOME", new Vector2(200, 455), Color.White);
+                    spriteBatch.DrawString(font, "", new Vector2(300, 550), Color.White);
+                    spriteBatch.DrawString(font, "", new Vector2(700, 550), Color.White);                    
+                    spriteBatch.DrawString(font, "Enter", new Vector2(300, 650), Color.White);
                     spriteBatch.DrawString(font, "Back", new Vector2(700, 650), Color.White);
                     spriteBatch.Draw(sword, swordcursor, Color.White);
                 }
