@@ -128,7 +128,7 @@ namespace VideoGameProject
 
         string PCfacing = "South";
         int PCmovementstate = 0;
-        int PCHP = 100;
+        int PCHP;
         int PCMANA = 50;
         int PCBaseDamage;
         int Experience = 0;
@@ -282,7 +282,7 @@ namespace VideoGameProject
             
 
             getEnemyHP = Enemies[SelectedEnemy].GetEnemyHP();
-            
+
 
 
             if (gamestate == "menu")
@@ -297,7 +297,36 @@ namespace VideoGameProject
                     }
                 }
 
-
+                attacks[0].SetAttackName("Punch");
+                attacks[0].SetAttackDamage(2);
+                attacks[0].SetAttackChance(80);
+                attacks[0].SetIsUnlocked(true);
+                attacks[0].SetAttackPrice(0);
+                attacks[1].SetAttackName("Kick");
+                attacks[1].SetAttackDamage(4);
+                attacks[1].SetAttackChance(50);
+                attacks[1].SetIsUnlocked(false);
+                attacks[1].SetAttackPrice(250);
+                attacks[2].SetAttackName("Arrow");
+                attacks[2].SetAttackDamage(1);
+                attacks[2].SetAttackChance(100);
+                attacks[2].SetIsUnlocked(false);
+                attacks[2].SetAttackPrice(500);
+                attacks[3].SetAttackName("Fireball");
+                attacks[3].SetAttackDamage(6);
+                attacks[3].SetAttackChance(100);
+                attacks[3].SetIsUnlocked(false);
+                attacks[3].SetAttackPrice(1000);
+                attacks[4].SetAttackName("Heal");
+                attacks[4].SetAttackDamage(-3);
+                attacks[4].SetAttackChance(100);
+                attacks[4].SetIsUnlocked(false);
+                attacks[4].SetAttackPrice(750);
+                attacks[5].SetAttackName("Kill");
+                attacks[5].SetAttackDamage(10000);
+                attacks[5].SetAttackChance(1);
+                attacks[5].SetIsUnlocked(false);
+                attacks[5].SetAttackPrice(666666);
 
 
                 if (kstate.IsKeyDown(Keys.Down) && cursorstateY < 2 && cursortime == 0)
@@ -392,32 +421,7 @@ namespace VideoGameProject
                 
 
 
-
-                // Värden för Attacks.
-                attacks[0].SetAttackName("Punch");
-                attacks[0].SetAttackDamage(2);
-                attacks[0].SetAttackChance(80);
-                attacks[0].SetIsUnlocked(true);
-                attacks[1].SetAttackName("Kick");
-                attacks[1].SetAttackDamage(4);
-                attacks[1].SetAttackChance(50);
-                attacks[1].SetIsUnlocked(true);
-                attacks[2].SetAttackName("Arrow");
-                attacks[2].SetAttackDamage(1);
-                attacks[2].SetAttackChance(100);                
-                attacks[2].SetIsUnlocked(true);
-                attacks[3].SetAttackName("Fireball");
-                attacks[3].SetAttackDamage(6);
-                attacks[3].SetAttackChance(100);
-                attacks[3].SetIsUnlocked(true);
-                attacks[4].SetAttackName("Heal");
-                attacks[4].SetAttackDamage(-3);
-                attacks[4].SetAttackChance(100);
-                attacks[4].SetIsUnlocked(true);
-                attacks[4].SetAttackName("KILL");
-                attacks[4].SetAttackDamage(10000);
-                attacks[4].SetAttackChance(1);
-                attacks[4].SetIsUnlocked(false);
+                
 
                 
 
@@ -515,14 +519,16 @@ namespace VideoGameProject
                             }
                             if (cursorstateX == 0 && cursorstateY == 1 && PCpos.X < 700)
                             {
-                                SelectedEnemy = r.Next(0, 3);
-                                GoldReward = r.Next(0, SelectedEnemy + 1 * 10);
+                                SelectedEnemy = r.Next(0, Level);
+                                GoldReward = r.Next(0, SelectedEnemy + 1 * 2000);
                                 ExperienceReward = r.Next(40, 100);
                                 gamestate = "Battle";
 
                             }
                             else if (cursorstateX == 0 && cursorstateY == 1 && PCpos.X > 700)
                             {
+                                cursorstateY = 8;
+                                cursordelay = true;
                                 gamestate = "Shop";
                             }
                         }
@@ -571,15 +577,15 @@ namespace VideoGameProject
             }
             if (gamestate == "Battle")
             {
-                if (Enemies[SelectedEnemy].GetEnemyHP() <= 0)
+                if (Enemies[SelectedEnemy].GetEnemyHP() <= 0 && kstate.IsKeyDown(Keys.Z))
                 {
-                    int AttackHit = r.Next(0, 101);
-                    
+                    int AttackHit = r.Next(0, 101);                    
                     EndingAnimation = true;                    
                     
                 }
-                //if (PCHP <= 0)
-                //Exit();
+                
+                if (PCHP <= 0 && kstate.IsKeyDown(Keys.Z))
+                    gamestate = "Death";
 
                 if (EndingAnimation == true && kstate.IsKeyDown(Keys.Z) && menutime == 0)
                 {
@@ -662,19 +668,22 @@ namespace VideoGameProject
                 {
                     
                     SelectedAttack = 0;
-                    SelectedAttackBool = true;
+                    if (attacks[SelectedAttack].GetIsUnlocked() == true)
+                        SelectedAttackBool = true;
 
                 }
                 if (cursorstateX == 1 && cursorstateY == 0 && kstate.IsKeyDown(Keys.Z) && Attacks == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
                 {
                     SelectedAttack = 1;
+                    if (attacks[SelectedAttack].GetIsUnlocked() == true)
                     SelectedAttackBool = true;
 
                 }
                 if (cursorstateX == 0 && cursorstateY == 1 && kstate.IsKeyDown(Keys.Z) && Attacks == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
                 {
                     SelectedAttack = 2;
-                    SelectedAttackBool = true;
+                    if (attacks[SelectedAttack].GetIsUnlocked() == true)
+                        SelectedAttackBool = true;
 
                 }
                 if (cursorstateX == 1 && cursorstateY == 1 && kstate.IsKeyDown(Keys.Z) && Attacks == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
@@ -686,19 +695,22 @@ namespace VideoGameProject
                 {
 
                     SelectedAttack = 3;
-                    SelectedAttackBool = true;
+                    if (attacks[SelectedAttack].GetIsUnlocked() == true)
+                        SelectedAttackBool = true;
 
                 }
                 if (cursorstateX == 1 && cursorstateY == 0 && kstate.IsKeyDown(Keys.Z) && Magic == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
                 {
                     SelectedAttack = 4;
-                    SelectedAttackBool = true;
+                    if (attacks[SelectedAttack].GetIsUnlocked() == true)
+                        SelectedAttackBool = true;
 
                 }
                 if (cursorstateX == 0 && cursorstateY == 1 && kstate.IsKeyDown(Keys.Z) && Magic == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
                 {
                     SelectedAttack = 5;
-                    SelectedAttackBool = true;
+                    if (attacks[SelectedAttack].GetIsUnlocked() == true)
+                        SelectedAttackBool = true;
 
                 }
                 if (cursorstateX == 1 && cursorstateY == 1 && kstate.IsKeyDown(Keys.Z) && Magic == true && menutime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
@@ -783,6 +795,83 @@ namespace VideoGameProject
 
             }
 
+            if (gamestate == "Shop")
+            {
+                if (cursordelay == true)
+                {
+                    cursortime++;
+                    if (cursortime > 10)
+                    {
+                        cursortime = 0;
+                        cursordelay = false;
+                    }
+                }
+
+                if (kstate.IsKeyDown(Keys.Down) && cursorstateY < 8 && cursortime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+                    cursorstateY++;
+                    cursordelay = true;
+                }
+                if (kstate.IsKeyDown(Keys.Up) && cursorstateY > 1 && cursortime == 0 && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
+                {
+                    cursorstateY--;
+                    cursordelay = true;
+                }
+
+                swordcursor.Y = cursorstateY * 75;
+
+                if (kstate.IsKeyDown(Keys.Z) && cursortime == 0)
+                {
+                    if (cursorstateY == 1 && Gold > attacks[1].GetAttackPrice())
+                    {
+                        attacks[1].SetIsUnlocked(true);
+                        Gold -= attacks[1].GetAttackPrice();
+                        attacks[1].SetAttackPrice(0);
+                    }
+                    if (cursorstateY == 2 && Gold > attacks[2].GetAttackPrice())
+                    {
+                        attacks[2].SetIsUnlocked(true);
+                        Gold -= attacks[2].GetAttackPrice();
+                        attacks[2].SetAttackPrice(0);
+                    }
+                    if (cursorstateY == 3 && Gold > attacks[3].GetAttackPrice())
+                    {
+                        attacks[3].SetIsUnlocked(true);
+                        Gold -= attacks[3].GetAttackPrice();
+                        attacks[3].SetAttackPrice(0);
+                    }
+                    if (cursorstateY == 4 && Gold > attacks[4].GetAttackPrice())
+                    {
+                        attacks[4].SetIsUnlocked(true);
+                        Gold -= attacks[4].GetAttackPrice();
+                        attacks[4].SetAttackPrice(0);
+                    }
+                    if (cursorstateY == 5 && Gold > attacks[5].GetAttackPrice())
+                    {
+                        attacks[5].SetIsUnlocked(true);
+                        Gold -= attacks[5].GetAttackPrice();
+                        attacks[5].SetAttackPrice(0);
+                    }
+
+
+
+
+
+
+
+                    if (cursorstateY == 8)
+                    gamestate = "overworld";
+                }
+
+            }
+
+            if (gamestate == "Death")
+            {
+                if (kstate.IsKeyDown(Keys.Enter))
+                    Exit();
+
+            }
+
 
             // TODO: Add your update logic here
 
@@ -832,8 +921,8 @@ namespace VideoGameProject
             {
                 spriteBatch.DrawString(font, "Attack", new Vector2(300, 550), Color.White);
                 spriteBatch.DrawString(font, "Magic", new Vector2(700, 550), Color.White);
-                spriteBatch.DrawString(font, "Check", new Vector2(300, 650), Color.White);
-                spriteBatch.DrawString(font, "Flee", new Vector2(700, 650), Color.White);
+                spriteBatch.DrawString(font, "", new Vector2(300, 650), Color.White);
+                spriteBatch.DrawString(font, "", new Vector2(700, 650), Color.White);
             }
             if (gamestate == "Battle" && Attacks == true && Magic == false && PlayerTurn == true && AttackAnimation == false && EndingAnimation == false)
             {
@@ -935,8 +1024,8 @@ namespace VideoGameProject
             if (gamestate == "overworld") //gamestate = overworld innebär att spelet är igång, då ska alltså menyn försvinna och karaktärer m.m ska kunna bli synliga. 
             {
                 spriteBatch.Draw(pixel, PC, Color.Transparent);
-                spriteBatch.DrawString(font, "Level:" + Level + " Exp:" + Experience, new Vector2(10, 10), Color.White);
-                spriteBatch.DrawString(font, "Gold:" + Gold, new Vector2(10, 110), Color.White);
+                spriteBatch.DrawString(font, "Level:" + Level + " Exp:" + Experience + " Gold:" + Gold, new Vector2(10, 10), Color.White);
+                
                 //spriteBatch.Draw(pixel, ArenamasterInteractRectEast, Color.Transparent);
                 //spriteBatch.Draw(pixel, ArenamasterInteractRectWest, Color.Transparent);    
                 //spriteBatch.Draw(pixel, ArenamasterInteractRectSouth, Color.Transparent);
@@ -1030,6 +1119,31 @@ namespace VideoGameProject
                     spriteBatch.Draw(sword, swordcursor, Color.White);
                 }
             }
+
+            if (gamestate == "Shop")
+            {
+                if (attacks[1].GetIsUnlocked() == false)
+                    spriteBatch.DrawString(font, "Boots Cost: " + attacks[1].GetAttackPrice() + " Gold", new Vector2(320, 65), Color.White);
+                if (attacks[2].GetIsUnlocked() == false)
+                    spriteBatch.DrawString(font, "Bow Cost: " + attacks[2].GetAttackPrice() + " Gold", new Vector2(320, 140), Color.White);
+                if (attacks[3].GetIsUnlocked() == false)
+                    spriteBatch.DrawString(font, "Lighter Cost: " + attacks[3].GetAttackPrice() + " Gold", new Vector2(320, 215), Color.White);
+                if (attacks[4].GetIsUnlocked() == false)
+                    spriteBatch.DrawString(font, "Healing Cost: " + attacks[4].GetAttackPrice() + " Gold", new Vector2(320, 290), Color.White);
+                if (attacks[5].GetIsUnlocked() == false)
+                    spriteBatch.DrawString(font, "Death Cost: " + attacks[5].GetAttackPrice() + " Gold", new Vector2(320, 365), Color.White);
+                spriteBatch.DrawString(font, "Back", new Vector2(320, 590), Color.White);
+                spriteBatch.Draw(sword, swordcursor, Color.White);
+            }
+
+            if (gamestate == "Death")
+            {
+                spriteBatch.DrawString(font, "Defeat", new Vector2(550, 100), Color.White);
+                spriteBatch.DrawString(font, "Press Enter to Exit", new Vector2(300, 200), Color.White);
+            }
+             
+            
+           
 
 
 

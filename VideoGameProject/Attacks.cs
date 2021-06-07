@@ -10,6 +10,7 @@ namespace VideoGameProject
     {
         private int AttackDamage;
         private int AttackChance;
+        private int AttackPrice;
         private string AttackName;
         static int AttackAmount = 0;
         public bool IsUnlocked;
@@ -30,6 +31,12 @@ namespace VideoGameProject
             AttackDamage = newAttackDamage;
         }
         public int GetAttackDamage() { return AttackDamage; }
+
+        public void SetAttackPrice(int newAttackPrice)
+        {
+            AttackPrice = newAttackPrice;
+        }
+        public int GetAttackPrice() { return AttackPrice; }
 
         public void SetAttackChance(int newAttackChance)
         {
